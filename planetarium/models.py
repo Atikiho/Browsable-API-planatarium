@@ -18,8 +18,14 @@ class PlanetariumDome(models.Model):
 
 
 class ShowSession(models.Model):
-    astronomy_show = models.ForeignKey(to=AstronomyShow, on_delete=models.CASCADE)
-    planetarium_dome = models.ForeignKey(to=PlanetariumDome, on_delete=models.CASCADE)
+    astronomy_show = models.ForeignKey(
+        to=AstronomyShow,
+        on_delete=models.CASCADE
+    )
+    planetarium_dome = models.ForeignKey(
+        to=PlanetariumDome,
+        on_delete=models.CASCADE
+    )
     show_time = models.DateTimeField()
 
 
@@ -31,5 +37,11 @@ class Reservation(models.Model):
 class Ticket(models.Model):
     row = models.IntegerField()
     seat = models.IntegerField()
-    show_session = models.ForeignKey(to=ShowSession, on_delete=models.CASCADE)
-    reservation = models.ForeignKey(to=Reservation, on_delete=models.DO_NOTHING)
+    show_session = models.ForeignKey(
+        to=ShowSession,
+        on_delete=models.CASCADE
+    )
+    reservation = models.ForeignKey(
+        to=Reservation,
+        on_delete=models.DO_NOTHING
+    )
