@@ -47,6 +47,9 @@ class ShowSession(models.Model):
     )
     show_time = models.DateTimeField()
 
+    class Meta:
+        ordering = ["-show_time"]
+
 
 class Reservation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -78,3 +81,4 @@ class Ticket(models.Model):
                 name="unique_row_seat_show_session"
             )
         ]
+        ordering = ["-reservation__created_at"]
