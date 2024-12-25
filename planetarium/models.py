@@ -5,16 +5,26 @@ from django.db import models
 class ShowTheme(models.Model):
     name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.name
+
 
 class AstronomyShow(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
+    show_theme = models.ManyToManyField(to=ShowTheme)
+
+    def __str__(self):
+        return self.title
 
 
 class PlanetariumDome(models.Model):
     name = models.CharField(max_length=255)
     rows = models.IntegerField()
     seats_in_row = models.IntegerField()
+
+    def __str__(self):
+        return self.name
 
 
 class ShowSession(models.Model):
@@ -31,7 +41,10 @@ class ShowSession(models.Model):
 
 class Reservation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    user = get_user_model()
+    user = models.ForeignKey(
+        to=get_user_model(),
+        on_delete=models.CASCADE
+    )
 
 
 class Ticket(models.Model):
