@@ -89,6 +89,13 @@ class TicketSerializer(serializers.ModelSerializer):
         seat = attrs.get("seat")
         show_session_data = attrs.get("show_session")
 
+        max_rows = show_session_data["planetarium_dome"].rows
+        max_seat = show_session_data["planetarium_dome"].seats_in_row
+
+        if row > max_rows or seat > max_seat:
+            raise serializers.ValidationError(f"row should be less than {max_rows} "
+                                              f"and seat should be less than {max_seat}")
+
         show_session = ShowSession.objects.filter(**show_session_data).first()
 
         if Ticket.objects.filter(row=row, seat=seat, show_session=show_session).exists():
