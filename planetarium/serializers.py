@@ -63,7 +63,7 @@ class ShowSessionDetailSerializer(serializers.ModelSerializer):
 
 
 class ReservationSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(source="user.name", read_only=True)
+    user = serializers.CharField(source="user.username", read_only=True)
 
     class Meta:
         model = Reservation
@@ -71,7 +71,7 @@ class ReservationSerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
-    show_session = ShowSessionSerializer(read_only=True)
+    show_session = ShowSessionSerializer()
     reservation = ReservationSerializer(read_only=True)
 
     class Meta:
@@ -83,3 +83,31 @@ class TicketSerializer(serializers.ModelSerializer):
             "show_session",
             "reservation"
         )
+
+    def validate(self, attrs):
+        row = attrs.get("row")
+        seat = attrs.get("seat")
+        show_session_data = attrs.get("show_session")
+
+        show_session = ShowSession.objects.filter(**show_session_data).first()
+
+        if Ticket.objects.filter(row=row, seat=seat, show_session=show_session).exists():
+            raise serializers.ValidationError("This place is already taken!")
+
+        return attrs
+
+    def create(self, validated_data):
+        show_session_data = validated_data.pop("show_session")
+        request_user = self.context['request'].user
+
+        show_session, _ = ShowSession.objects.get_or_create(**show_session_data)
+
+        reservation = Reservation.objects.create(user=request_user)
+
+        ticket = Ticket.objects.create(
+            **validated_data,
+            show_session=show_session,
+            reservation=reservation
+        )
+        return ticket
+
