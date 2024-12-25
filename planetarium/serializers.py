@@ -19,7 +19,17 @@ class ShowThemeSerializer(serializers.ModelSerializer):
 class AstronomyShowSerializer(serializers.ModelSerializer):
     class Meta:
         model = AstronomyShow
-        fields = ("id", "title", "description")
+        fields = ("id", "title", "description", "show_theme")
+
+    def to_representation(self, instance):
+        return {
+            "id": instance.id,
+            "title": instance.title,
+            "description": instance.description,
+            "show_theme": [
+                show_theme.name for show_theme in instance.show_theme.all()
+            ]
+        }
 
 
 class PlanetariumDomeSerializer(serializers.ModelSerializer):
@@ -29,18 +39,18 @@ class PlanetariumDomeSerializer(serializers.ModelSerializer):
 
 
 class ShowSessionSerializer(serializers.ModelSerializer):
-    astronomy_show = serializers.CharField(
-        source="astronomy_show.title",
-        read_only=True
-    )
-    planetarium_dome = serializers.CharField(
-        source="planetarium_dome.name",
-        read_only=True,
-    )
 
     class Meta:
         model = ShowSession
         fields = ("id", "astronomy_show", "planetarium_dome", "show_time")
+
+    def to_representation(self, instance):
+        return {
+            "id": instance.id,
+            "astronomy_show": instance.astronomy_show.title,
+            "planetarium_dome": instance.planetarium_dome.name,
+            "show_time": instance.show_time
+        }
 
 
 class ShowSessionDetailSerializer(serializers.ModelSerializer):
