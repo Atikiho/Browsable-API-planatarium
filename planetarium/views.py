@@ -1,5 +1,6 @@
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from planetarium.models import (
@@ -73,10 +74,12 @@ class ShowSessionViewSet(viewsets.ModelViewSet):
         return ShowSessionSerializer
 
 
-class ReservationViewSet(viewsets.ModelViewSet):
+class ReservationViewSet(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin
+):
     serializer_class = ReservationSerializer
     queryset = Reservation.objects.select_related("user")
-    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -86,3 +89,11 @@ class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     queryset = Ticket.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def perform_destroy(self, instance):
+        if instance.reservation.user == self.request.user:
+            instance.delete()
+        else:
+            raise PermissionDenied(
+                "You are need to be ticket owner or admin to delete"
+            )
