@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
@@ -29,8 +30,29 @@ class ShowThemeViewSet(viewsets.ModelViewSet):
 
 class AstronomyShowViewSet(viewsets.ModelViewSet):
     serializer_class = AstronomyShowSerializer
-    queryset = AstronomyShow.objects.all()
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+
+    def get_queryset(self):
+        queryset = AstronomyShow.objects.prefetch_related("show_theme")
+        show_theme = self.request.query_params.get("show_theme", "").strip()
+
+        if show_theme:
+            show_themes = [int(str_id) for str_id in show_theme.split(",")]
+            queryset = queryset.filter(show_theme__id__in=show_themes)
+
+        return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "show_theme",
+                type={"type": "list", "items": {"type": "number"}},
+                description="search by show_theme id's"
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(self, request, *args, **kwargs)
 
 
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
@@ -40,7 +62,7 @@ class PlanetariumDomeViewSet(viewsets.ModelViewSet):
 
 
 class ShowSessionViewSet(viewsets.ModelViewSet):
-    queryset = ShowSession.objects.all()
+    queryset = ShowSession.objects.select_related("astronomy_show", "planetarium_dome")
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
@@ -53,8 +75,11 @@ class ShowSessionViewSet(viewsets.ModelViewSet):
 
 class ReservationViewSet(viewsets.ModelViewSet):
     serializer_class = ReservationSerializer
-    queryset = Reservation.objects.all()
+    queryset = Reservation.objects.select_related("user")
     permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class TicketViewSet(viewsets.ModelViewSet):
