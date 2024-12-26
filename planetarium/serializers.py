@@ -71,7 +71,11 @@ class ReservationSerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
-    show_session = ShowSessionSerializer()
+    show_session_id = serializers.PrimaryKeyRelatedField(
+        queryset=ShowSession.objects.all(),
+        write_only=True
+    )
+    show_session = ShowSessionSerializer(read_only=True)
     reservation = ReservationSerializer(read_only=True)
 
     class Meta:
@@ -81,16 +85,17 @@ class TicketSerializer(serializers.ModelSerializer):
             "row",
             "seat",
             "show_session",
+            "show_session_id",
             "reservation"
         )
 
     def validate(self, attrs):
         row = attrs.get("row")
         seat = attrs.get("seat")
-        show_session_data = attrs.get("show_session")
+        show_session = attrs.get("show_session_id")
 
-        max_rows = show_session_data["planetarium_dome"].rows
-        max_seat = show_session_data["planetarium_dome"].seats_in_row
+        max_rows = show_session.planetarium_dome.rows
+        max_seat = show_session.planetarium_dome.seats_in_row
 
         if row > max_rows or seat > max_seat:
             raise serializers.ValidationError(f"row should be less than {max_rows} "
@@ -99,24 +104,20 @@ class TicketSerializer(serializers.ModelSerializer):
         if row < 0 or seat < 0:
             raise serializers.ValidationError("row and seat can't be negative")
 
-        show_session = ShowSession.objects.filter(**show_session_data).first()
-
         if Ticket.objects.filter(row=row, seat=seat, show_session=show_session).exists():
             raise serializers.ValidationError("This place is already taken!")
 
         return attrs
 
     def create(self, validated_data):
-        show_session_data = validated_data.pop("show_session")
         request_user = self.context['request'].user
-
-        show_session, _ = ShowSession.objects.get_or_create(**show_session_data)
+        show_session = validated_data.pop("show_session_id")
 
         reservation = Reservation.objects.create(user=request_user)
 
         ticket = Ticket.objects.create(
             **validated_data,
-            show_session=show_session,
-            reservation=reservation
+            reservation=reservation,
+            show_session=show_session
         )
         return ticket
