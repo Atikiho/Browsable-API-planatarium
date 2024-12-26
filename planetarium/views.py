@@ -91,7 +91,11 @@ class TicketViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def perform_destroy(self, instance):
-        if instance.reservation.user == self.request.user:
+        if (
+            instance.reservation.user == self.request.user
+            or self.request.user.is_staff is True
+            or self.request.user.is_superuser is True
+        ):
             instance.delete()
         else:
             raise PermissionDenied(
