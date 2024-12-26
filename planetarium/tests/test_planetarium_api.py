@@ -146,32 +146,28 @@ class PlanetariumTests(APITestCase):
         ticket_data = {
             "row": 2,
             "seat": 3,
-            "show_session": {
-                "show_time": "2024-12-25T19:37:00Z",
-                "astronomy_show": 1,
-                "planetarium_dome": 1,
-            },
+            "show_session_id": 1,
             "reservation": 1,
         }
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data, format="json")
+        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         ticket_data["row"] = 1000
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data, format="json")
+        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
         ticket_data["row"] = 1
         ticket_data["seat"] = 1000
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data, format="json")
+        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
         ticket_data["row"] = -12
         ticket_data["seat"] = -352
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data, format="json")
+        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_ticket_deleting(self):
