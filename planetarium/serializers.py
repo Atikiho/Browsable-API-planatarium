@@ -96,6 +96,9 @@ class TicketSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f"row should be less than {max_rows} "
                                               f"and seat should be less than {max_seat}")
 
+        if row < 0 or seat < 0:
+            raise serializers.ValidationError("row and seat can't be negative")
+
         show_session = ShowSession.objects.filter(**show_session_data).first()
 
         if Ticket.objects.filter(row=row, seat=seat, show_session=show_session).exists():
@@ -117,4 +120,3 @@ class TicketSerializer(serializers.ModelSerializer):
             reservation=reservation
         )
         return ticket
-
