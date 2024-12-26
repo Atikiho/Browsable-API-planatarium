@@ -176,20 +176,28 @@ class PlanetariumTests(APITestCase):
 
     def test_ticket_deleting(self):
         self.client.force_authenticate(user=self.user2)
-        res = self.client.delete(reverse("planetarium:ticket-detail", args=[1]))
+        res = self.client.delete(
+            reverse("planetarium:ticket-detail", args=[1])
+        )
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
         self.client.force_authenticate(user=self.user)
-        res = self.client.delete(reverse("planetarium:ticket-detail", args=[1]))
+        res = self.client.delete(
+            reverse("planetarium:ticket-detail", args=[1])
+        )
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
         self.client.force_authenticate(user=self.admin)
-        res = self.client.delete(reverse("planetarium:ticket-detail", args=[2]))
+        res = self.client.delete(
+            reverse("planetarium:ticket-detail", args=[2])
+        )
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_reservation_deletion_on_ticket_deletion(self):
         self.client.force_authenticate(user=self.user)
-        res = self.client.delete(reverse("planetarium:ticket-detail", args=[1]))
+        res = self.client.delete(
+            reverse("planetarium:ticket-detail", args=[1])
+        )
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
         self.assertFalse(Ticket.objects.filter(id=1).exists())

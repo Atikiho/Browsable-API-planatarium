@@ -110,7 +110,7 @@ class TicketSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        request_user = self.context['request'].user
+        request_user = self.context["request"].user
         show_session = validated_data.pop("show_session_id")
 
         reservation = Reservation.objects.create(user=request_user)
