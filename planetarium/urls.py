@@ -15,34 +15,34 @@ app_name = "planetarium"
 router = routers.DefaultRouter()
 
 router.register(
-    "show_theme",
+    "show-themes",
     ShowThemeViewSet,
-    basename="show_theme"
+    basename="show-themes"
 )
 router.register(
-    "astronomy_show",
+    "astronomy-shows",
     AstronomyShowViewSet,
-    basename="astronomy_show"
+    basename="astronomy-shows"
 )
 router.register(
-    "planetarium_dome",
+    "planetarium-domes",
     PlanetariumDomeViewSet,
-    basename="planetarium_dome"
+    basename="planetarium-domes"
 )
 router.register(
-    "show_session",
+    "show-sessions",
     ShowSessionViewSet,
-    basename="show_session"
+    basename="show-sessions"
 )
 router.register(
-    "reservation",
+    "reservations",
     ReservationViewSet,
-    basename="reservation"
+    basename="reservations"
 )
 router.register(
-    "ticket",
+    "tickets",
     TicketViewSet,
-    basename="ticket"
+    basename="tickets"
 )
 
-urlpatterns = [path("", include(router.urls)),]
+urlpatterns = router.urls
