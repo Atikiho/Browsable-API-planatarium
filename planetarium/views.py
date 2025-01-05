@@ -53,7 +53,7 @@ class AstronomyShowViewSet(viewsets.ModelViewSet):
         ]
     )
     def list(self, request, *args, **kwargs):
-        return super().list(self, request, *args, **kwargs)
+        return super().list(request, *args, **kwargs)
 
 
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
@@ -76,7 +76,8 @@ class ShowSessionViewSet(viewsets.ModelViewSet):
 
 class ReservationViewSet(
     viewsets.GenericViewSet,
-    mixins.ListModelMixin
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
 ):
     serializer_class = ReservationSerializer
     queryset = Reservation.objects.select_related("user")
