@@ -7,15 +7,9 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Create a non-privileged user that the app will run under.
-ARG UID=10001
 RUN adduser \
     --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
     --no-create-home \
-    --uid "${UID}" \
     appuser
 
 
