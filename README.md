@@ -2,6 +2,9 @@
 API which allows you to view show themes, sessions, reservations and tickets reservation by your own
 
 ### Getting started
+
+###### Create .env file using .env_sample as sample
+
 ##### Installing using GitHub
 ```
 git clone https://github.com/Atikiho/Browsable-API-planetarium.git
@@ -38,6 +41,7 @@ get access token via api/user/token
 
 ### Features
  - Authentication via JWT tokens
+ - registration and token obtain via email
  - Documentation at api/doc/swagger/
  - CRUD operations for show themes, astronomy shows, planetarium domes, show sessions and tickets
  - filtering for astronomy shows
