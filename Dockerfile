@@ -9,9 +9,8 @@ WORKDIR /app
 
 RUN adduser \
     --disabled-password \
-    --no-create-home \
+    --home /app \
     appuser
-
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
@@ -22,4 +21,4 @@ USER appuser
 
 COPY . .
 
-EXPOSE 8001
+EXPOSE 8000
