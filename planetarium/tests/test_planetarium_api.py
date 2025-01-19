@@ -14,6 +14,27 @@ from planetarium.models import (
 from planetarium.serializers import AstronomyShowSerializer
 
 
+urls = [
+    "planetarium:show-sessions",
+    "planetarium:show-themes",
+    "planetarium:astronomy-shows",
+    "planetarium:planetarium-domes"
+]
+
+methods = ["GET", "POST", "DELETE"]
+
+user_status_codes = [
+    status.HTTP_200_OK,
+    status.HTTP_403_FORBIDDEN,
+    status.HTTP_403_FORBIDDEN
+]
+
+admin_status_codes = [
+    status.HTTP_200_OK,
+    status.HTTP_400_BAD_REQUEST
+]
+
+
 class PlanetariumTests(APITestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -61,39 +82,20 @@ class PlanetariumTests(APITestCase):
                 reservation=reservation,
             )
 
-
-    @parameterized.expand([
-        ("GET", "planetarium:show-sessions", status.HTTP_401_UNAUTHORIZED),
-        ("POST", "planetarium:show-sessions", status.HTTP_401_UNAUTHORIZED),
-        ("DELETE", "planetarium:show-sessions", status.HTTP_401_UNAUTHORIZED),
-        ("GET", "planetarium:show-themes", status.HTTP_401_UNAUTHORIZED),
-        ("POST", "planetarium:show-themes", status.HTTP_401_UNAUTHORIZED),
-        ("DELETE", "planetarium:show-themes", status.HTTP_401_UNAUTHORIZED),
-        ("GET", "planetarium:astronomy-shows", status.HTTP_401_UNAUTHORIZED),
-        ("POST", "planetarium:astronomy-shows", status.HTTP_401_UNAUTHORIZED),
-        ("DELETE", "planetarium:astronomy-shows", status.HTTP_401_UNAUTHORIZED),
-        ("GET", "planetarium:planetarium-domes", status.HTTP_401_UNAUTHORIZED),
-        ("POST", "planetarium:planetarium-domes", status.HTTP_401_UNAUTHORIZED),
-        ("DELETE", "planetarium:planetarium-domes", status.HTTP_401_UNAUTHORIZED),
-    ])
+    @parameterized.expand(
+        (method, url, status.HTTP_401_UNAUTHORIZED)
+        for method in methods
+        for url in urls
+    )
     def test_anonym_access(self, method, url, expected_status):
         res = getattr(self.client, method.lower())(reverse(f"{url}-list"))
         self.assertEqual(res.status_code, expected_status)
 
-    @parameterized.expand([
-        ("GET", "planetarium:show-sessions", status.HTTP_200_OK),
-        ("POST", "planetarium:show-sessions", status.HTTP_403_FORBIDDEN),
-        ("DELETE", "planetarium:show-sessions", status.HTTP_403_FORBIDDEN),
-        ("GET", "planetarium:show-themes", status.HTTP_200_OK),
-        ("POST", "planetarium:show-themes", status.HTTP_403_FORBIDDEN),
-        ("DELETE", "planetarium:show-themes", status.HTTP_403_FORBIDDEN),
-        ("GET", "planetarium:astronomy-shows", status.HTTP_200_OK),
-        ("POST", "planetarium:astronomy-shows", status.HTTP_403_FORBIDDEN),
-        ("DELETE", "planetarium:astronomy-shows", status.HTTP_403_FORBIDDEN),
-        ("GET", "planetarium:planetarium-domes", status.HTTP_200_OK),
-        ("POST", "planetarium:planetarium-domes", status.HTTP_403_FORBIDDEN),
-        ("DELETE", "planetarium:planetarium-domes", status.HTTP_403_FORBIDDEN),
-    ])
+    @parameterized.expand(
+        (method, url, status_code)
+        for method, status_code in zip(methods, user_status_codes)
+        for url in urls
+    )
     def test_authorized_user_access(self, method, url, expected_status):
         self.client.force_authenticate(user=self.user)
 
@@ -101,31 +103,19 @@ class PlanetariumTests(APITestCase):
         self.assertEqual(res.status_code, expected_status)
 
 
-    @parameterized.expand([
-        ("GET", "planetarium:show-sessions", status.HTTP_200_OK),
-        ("POST", "planetarium:show-sessions", status.HTTP_400_BAD_REQUEST),
-        ("GET", "planetarium:show-themes", status.HTTP_200_OK),
-        ("POST", "planetarium:show-themes", status.HTTP_400_BAD_REQUEST),
-        ("GET", "planetarium:astronomy-shows", status.HTTP_200_OK),
-        ("POST", "planetarium:astronomy-shows", status.HTTP_400_BAD_REQUEST),
-        ("GET", "planetarium:planetarium-domes", status.HTTP_200_OK),
-        ("POST", "planetarium:planetarium-domes", status.HTTP_400_BAD_REQUEST),
-    ])
+    @parameterized.expand(
+        (method, url, status_code)
+        for method, status_code in zip(["GET", "POST"], admin_status_codes)
+        for url in urls
+    )
     def test_admin_user_access(self, method, url, expected_status):
         self.client.force_authenticate(user=self.admin)
         res = getattr(self.client, method.lower())(reverse(f"{url}-list"))
 
         self.assertEqual(res.status_code, expected_status)
 
-    @parameterized.expand(
-        [
-            "planetarium:show-sessions",
-            "planetarium:show-themes",
-            "planetarium:astronomy-shows",
-            "planetarium:planetarium-domes"
-        ]
-    )
-    def test_admin_user_deletion(self, url):
+    @parameterized.expand(urls)
+    def test_admin_user_delete_methods(self, url):
         self.client.force_authenticate(user=self.admin)
         res = self.client.delete(reverse(f"{url}-detail", args=[1]))
 
