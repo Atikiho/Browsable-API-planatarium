@@ -3,7 +3,7 @@ API which allows you to view show themes, sessions, reservations and tickets res
 
 ### Getting started
 
-###### Create .env file using .env_sample as sample
+###### Create .env file using .env_sample as sample. It's crucial because code is using .env variables and won't work without it
 
 ##### Installing using GitHub
 ```
