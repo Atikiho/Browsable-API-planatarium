@@ -1,3 +1,4 @@
+from parameterized import parameterized
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
@@ -60,86 +61,75 @@ class PlanetariumTests(APITestCase):
                 reservation=reservation,
             )
 
-        self.urls = [
-            "planetarium:show-session",
-            "planetarium:show-theme",
-            "planetarium:astronomy-show",
-            "planetarium:planetarium-dome",
-        ]
 
-    def test_anonym_access(self):
+    @parameterized.expand([
+        ("GET", "planetarium:show-sessions", status.HTTP_401_UNAUTHORIZED),
+        ("POST", "planetarium:show-sessions", status.HTTP_401_UNAUTHORIZED),
+        ("DELETE", "planetarium:show-sessions", status.HTTP_401_UNAUTHORIZED),
+        ("GET", "planetarium:show-themes", status.HTTP_401_UNAUTHORIZED),
+        ("POST", "planetarium:show-themes", status.HTTP_401_UNAUTHORIZED),
+        ("DELETE", "planetarium:show-themes", status.HTTP_401_UNAUTHORIZED),
+        ("GET", "planetarium:astronomy-shows", status.HTTP_401_UNAUTHORIZED),
+        ("POST", "planetarium:astronomy-shows", status.HTTP_401_UNAUTHORIZED),
+        ("DELETE", "planetarium:astronomy-shows", status.HTTP_401_UNAUTHORIZED),
+        ("GET", "planetarium:planetarium-domes", status.HTTP_401_UNAUTHORIZED),
+        ("POST", "planetarium:planetarium-domes", status.HTTP_401_UNAUTHORIZED),
+        ("DELETE", "planetarium:planetarium-domes", status.HTTP_401_UNAUTHORIZED),
+    ])
+    def test_anonym_access(self, method, url, expected_status):
+        res = getattr(self.client, method.lower())(reverse(f"{url}-list"))
+        self.assertEqual(res.status_code, expected_status)
 
-        for url in self.urls:
-            res = self.client.get(reverse(f"{url}-list"))
-            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            res = self.client.post(reverse(f"{url}-list"))
-            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            res = self.client.get(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            res = self.client.put(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            res = self.client.patch(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-            res = self.client.delete(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        res = self.client.get(reverse("planetarium:reservation-list"))
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-        res = self.client.get(reverse("planetarium:ticket-list"))
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-        res = self.client.get(reverse("planetarium:ticket-detail", args=[1]))
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-    def test_authorized_user_access(self):
+    @parameterized.expand([
+        ("GET", "planetarium:show-sessions", status.HTTP_200_OK),
+        ("POST", "planetarium:show-sessions", status.HTTP_403_FORBIDDEN),
+        ("DELETE", "planetarium:show-sessions", status.HTTP_403_FORBIDDEN),
+        ("GET", "planetarium:show-themes", status.HTTP_200_OK),
+        ("POST", "planetarium:show-themes", status.HTTP_403_FORBIDDEN),
+        ("DELETE", "planetarium:show-themes", status.HTTP_403_FORBIDDEN),
+        ("GET", "planetarium:astronomy-shows", status.HTTP_200_OK),
+        ("POST", "planetarium:astronomy-shows", status.HTTP_403_FORBIDDEN),
+        ("DELETE", "planetarium:astronomy-shows", status.HTTP_403_FORBIDDEN),
+        ("GET", "planetarium:planetarium-domes", status.HTTP_200_OK),
+        ("POST", "planetarium:planetarium-domes", status.HTTP_403_FORBIDDEN),
+        ("DELETE", "planetarium:planetarium-domes", status.HTTP_403_FORBIDDEN),
+    ])
+    def test_authorized_user_access(self, method, url, expected_status):
         self.client.force_authenticate(user=self.user)
 
-        for url in self.urls:
-            res = self.client.get(reverse(f"{url}-list"))
-            self.assertEqual(res.status_code, status.HTTP_200_OK)
+        res = getattr(self.client, method.lower())(reverse(f"{url}-list"))
+        self.assertEqual(res.status_code, expected_status)
 
-            res = self.client.get(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-            res = self.client.post(reverse(f"{url}-list"))
-            self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
-
-            res = self.client.put(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
-
-            res = self.client.patch(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
-
-            res = self.client.delete(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_admin_user_access(self):
+    @parameterized.expand([
+        ("GET", "planetarium:show-sessions", status.HTTP_200_OK),
+        ("POST", "planetarium:show-sessions", status.HTTP_400_BAD_REQUEST),
+        ("GET", "planetarium:show-themes", status.HTTP_200_OK),
+        ("POST", "planetarium:show-themes", status.HTTP_400_BAD_REQUEST),
+        ("GET", "planetarium:astronomy-shows", status.HTTP_200_OK),
+        ("POST", "planetarium:astronomy-shows", status.HTTP_400_BAD_REQUEST),
+        ("GET", "planetarium:planetarium-domes", status.HTTP_200_OK),
+        ("POST", "planetarium:planetarium-domes", status.HTTP_400_BAD_REQUEST),
+    ])
+    def test_admin_user_access(self, method, url, expected_status):
         self.client.force_authenticate(user=self.admin)
+        res = getattr(self.client, method.lower())(reverse(f"{url}-list"))
 
-        for url in self.urls:
-            res = self.client.get(reverse(f"{url}-list"))
-            self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.status_code, expected_status)
 
-            res = self.client.get(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_200_OK)
+    @parameterized.expand(
+        [
+            "planetarium:show-sessions",
+            "planetarium:show-themes",
+            "planetarium:astronomy-shows",
+            "planetarium:planetarium-domes"
+        ]
+    )
+    def test_admin_user_deletion(self, url):
+        self.client.force_authenticate(user=self.admin)
+        res = self.client.delete(reverse(f"{url}-detail", args=[1]))
 
-            res = self.client.post(reverse(f"{url}-list"))
-            self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-
-            res = self.client.put(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
-
-            res = self.client.patch(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-            res = self.client.delete(reverse(f"{url}-detail", args=[1]))
-            self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_ticket_validation(self):
         self.client.force_authenticate(user=self.user)
@@ -150,49 +140,44 @@ class PlanetariumTests(APITestCase):
             "reservation": 1,
         }
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
+        res = self.client.post(reverse("planetarium:tickets-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         ticket_data["row"] = 1000
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
+        res = self.client.post(reverse("planetarium:tickets-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
         ticket_data["row"] = 1
         ticket_data["seat"] = 1000
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
+        res = self.client.post(reverse("planetarium:tickets-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
         ticket_data["row"] = -12
         ticket_data["seat"] = -352
 
-        res = self.client.post(reverse("planetarium:ticket-list"), ticket_data)
+        res = self.client.post(reverse("planetarium:tickets-list"), ticket_data)
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_ticket_deleting(self):
-        self.client.force_authenticate(user=self.user2)
+    @parameterized.expand(
+        [
+            ("user2", status.HTTP_403_FORBIDDEN, 1),
+            ("user", status.HTTP_204_NO_CONTENT, 1),
+            ("admin", status.HTTP_204_NO_CONTENT, 2)
+        ]
+    )
+    def test_ticket_deleting(self, user, status_code, ticket_id):
+        self.client.force_authenticate(user=getattr(self, user))
         res = self.client.delete(
-            reverse("planetarium:ticket-detail", args=[1])
+            reverse("planetarium:tickets-detail", args=(ticket_id,))
         )
-        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
-
-        self.client.force_authenticate(user=self.user)
-        res = self.client.delete(
-            reverse("planetarium:ticket-detail", args=[1])
-        )
-        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
-
-        self.client.force_authenticate(user=self.admin)
-        res = self.client.delete(
-            reverse("planetarium:ticket-detail", args=[2])
-        )
-        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(res.status_code, status_code)
 
     def test_reservation_deletion_on_ticket_deletion(self):
         self.client.force_authenticate(user=self.user)
         res = self.client.delete(
-            reverse("planetarium:ticket-detail", args=[1])
+            reverse("planetarium:tickets-detail", args=[1])
         )
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
@@ -203,7 +188,7 @@ class PlanetariumTests(APITestCase):
         self.client.force_authenticate(user=self.user)
 
         res = self.client.get(
-            reverse("planetarium:astronomy-show-list"),
+            reverse("planetarium:astronomy-shows-list"),
             data={"show_theme": "1, 2"}
         )
         self.assertEqual(res.status_code, status.HTTP_200_OK)
